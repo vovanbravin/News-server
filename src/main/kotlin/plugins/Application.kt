@@ -23,7 +23,7 @@ fun Application.module() {
     val hashPasswordUseCase = HashPasswordUseCase()
     val resetPasswordUseCase = ResetPasswordUseCase()
     configureSerialization(userUseCase, hashPasswordUseCase, resetPasswordUseCase)
-    DatabaseFactory.configureDatabase()
+    configureDatabase()
     configureMonitoring()
     configureSecurity(userUseCase)
     configureRouting()
