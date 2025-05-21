@@ -37,4 +37,8 @@ class UserUseCase(
 
     fun generateToken(user: User): String = jwtService.generateToken(user)
 
+    suspend fun resetPassword(userId: Int, hash: String){
+        userRepository.resetPassword(userId, hash)
+    }
+
 }

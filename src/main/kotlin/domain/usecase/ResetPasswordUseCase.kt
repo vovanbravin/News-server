@@ -32,7 +32,7 @@ class ResetPasswordUseCase {
             setFrom(InternetAddress())
             addRecipient(Message.RecipientType.TO, InternetAddress(to))
             subject = "Reset password"
-            setText("Click to reset your password: http://10.24.200.162:8081/auth/reset-password?token=$token")
+            setText("Click to reset your password: http://192.168.0.5:8081/auth/reset-password?token=$token")
         }
 
         Transport.send(message)

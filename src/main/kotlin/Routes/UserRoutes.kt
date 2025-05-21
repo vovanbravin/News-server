@@ -1,9 +1,12 @@
 package Routes
 
+import data.model.PasswordResetParams
 import data.model.User
+import data.repository.PasswordResetRepositoryImpl
 import domain.model.AuthParams
 import domain.model.AuthRespond
 import domain.model.PasswordReset
+import domain.repositories.PasswordResetRepository
 import domain.repositories.UserRepository
 import domain.usecase.HashPasswordUseCase
 import domain.usecase.ResetPasswordUseCase
@@ -31,8 +34,12 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.update
 import tables.UserTable
 
-fun Route.userRoutes(userUseCase: UserUseCase, hashPasswordUseCase: HashPasswordUseCase, resetPasswordUseCase: ResetPasswordUseCase)
-{
+fun Route.userRoutes(
+    userUseCase: UserUseCase,
+    hashPasswordUseCase: HashPasswordUseCase,
+    resetPasswordUseCase: ResetPasswordUseCase,
+    passwordResetRepository: PasswordResetRepository
+) {
     post("auth/sign-up") {
         val user = call.receive<User>()
 
@@ -40,7 +47,7 @@ fun Route.userRoutes(userUseCase: UserUseCase, hashPasswordUseCase: HashPassword
 
         val message = userUseCase.insertUser(user)
 
-        if(message == null){
+        if (message == null) {
             val userTable = userUseCase.getUserByEmail(user.email)
             val token = userUseCase.generateToken(user)
             call.respond(HttpStatusCode.Created, AuthRespond(userTable!!, token))
@@ -56,12 +63,12 @@ fun Route.userRoutes(userUseCase: UserUseCase, hashPasswordUseCase: HashPassword
 
         val user = userUseCase.getUserByEmail(params.email)
 
-        if(user == null){
+        if (user == null) {
             call.respond(HttpStatusCode.BadRequest, "User not found")
             return@post
         }
 
-        if(!hashPasswordUseCase.comparePassword(params.password, user.password)){
+        if (!hashPasswordUseCase.comparePassword(params.password, user.password)) {
             call.respond(HttpStatusCode.BadRequest, "Wrong password")
         }
 
@@ -69,13 +76,12 @@ fun Route.userRoutes(userUseCase: UserUseCase, hashPasswordUseCase: HashPassword
         call.respond(HttpStatusCode.OK, AuthRespond(user, token))
     }
 
-    post("auth/forgot-password"){
+    post("auth/forgot-password") {
         val params = call.receive<PasswordReset>()
 
         val user = userUseCase.getUserByEmail(email = params.email)
 
-        if(user == null)
-        {
+        if (user == null) {
             call.respond(HttpStatusCode.BadRequest, "User not found")
             return@post
         }
@@ -83,14 +89,14 @@ fun Route.userRoutes(userUseCase: UserUseCase, hashPasswordUseCase: HashPassword
         val token = UUID.randomUUID().toString()
 
         val expireAt = LocalDateTime.now().plusHours(1)
-        transaction {
-            PasswordResetToken
-                .insert {table->
-                    table[PasswordResetToken.token] = token
-                    table[userId] = user.id
-                    table[PasswordResetToken.expireAt] = expireAt
-                }
-        }
+
+        val passwordResetParams = PasswordResetParams(
+            token,
+            user.id,
+            expireAt
+        )
+
+        passwordResetRepository.insertToken(passwordResetParams)
 
 
         resetPasswordUseCase.reset(params.email, token)
@@ -100,7 +106,8 @@ fun Route.userRoutes(userUseCase: UserUseCase, hashPasswordUseCase: HashPassword
 
     get("/auth/reset-password") {
         val token = call.request.queryParameters["token"] ?: ""
-        call.respondText("""
+        call.respondText(
+            """
         <html>
         <body>
             <form action="/auth/reset-password?token=$token" method="post">
@@ -111,7 +118,8 @@ fun Route.userRoutes(userUseCase: UserUseCase, hashPasswordUseCase: HashPassword
             </form>
         </body>
         </html>
-    """.trimIndent(), ContentType.Text.Html)
+    """.trimIndent(), ContentType.Text.Html
+        )
     }
 
     post("auth/reset-password") {
@@ -119,28 +127,18 @@ fun Route.userRoutes(userUseCase: UserUseCase, hashPasswordUseCase: HashPassword
         val token = params["token"] ?: return@post call.respond(HttpStatusCode.BadRequest)
         val newPassword = params["password"] ?: return@post call.respond(HttpStatusCode.BadRequest)
 
-        val userId = transaction {
-            val record = PasswordResetToken.select {
-                (PasswordResetToken.token eq token) and
-                        (PasswordResetToken.expireAt greaterEq LocalDateTime.now())
-            }.singleOrNull() ?: return@transaction null
+        val passwordResetParams = passwordResetRepository.getByToken(token)
 
-            val id = record[PasswordResetToken.userId]
-            PasswordResetToken.deleteWhere { PasswordResetToken.token eq token } // удалим токен
-            id
-        }
-
-        if (userId == null) {
+        if(passwordResetParams ==  null)
+        {
             return@post call.respond(HttpStatusCode.BadRequest, "Недействительный или просроченный токен")
         }
 
+        passwordResetRepository.deleteByToken(passwordResetParams.token)
+
         val hashed = hashPasswordUseCase.hashPassword(newPassword)
 
-        transaction {
-            UserTable.update({ UserTable.id eq userId }) {
-                it[password] = hashed
-            }
-        }
+        userUseCase.resetPassword(passwordResetParams.userId, hashed)
 
         call.respond(HttpStatusCode.OK, "Пароль успешно обновлён")
     }

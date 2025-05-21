@@ -1,6 +1,7 @@
 package com.example.plugins
 
 import authentification.JwtService
+import data.repository.PasswordResetRepositoryImpl
 import data.repository.UserRepositoryImpl
 import domain.usecase.HashPasswordUseCase
 import domain.usecase.ResetPasswordUseCase
@@ -22,7 +23,8 @@ fun Application.module() {
     )
     val hashPasswordUseCase = HashPasswordUseCase()
     val resetPasswordUseCase = ResetPasswordUseCase()
-    configureSerialization(userUseCase, hashPasswordUseCase, resetPasswordUseCase)
+    val passwordResetRepository = PasswordResetRepositoryImpl()
+    configureSerialization(userUseCase, hashPasswordUseCase, resetPasswordUseCase, passwordResetRepository)
     DatabaseFactory.configureDatabase()
     configureMonitoring()
     configureSecurity(userUseCase)

@@ -1,6 +1,7 @@
 package com.example.plugins
 
 import Routes.userRoutes
+import domain.repositories.PasswordResetRepository
 import domain.usecase.HashPasswordUseCase
 import domain.usecase.ResetPasswordUseCase
 import domain.usecase.UserUseCase
@@ -10,14 +11,14 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Application.configureSerialization(userUseCase: UserUseCase, hashPasswordUseCase: HashPasswordUseCase ,resetPasswordUseCase: ResetPasswordUseCase) {
+fun Application.configureSerialization(userUseCase: UserUseCase, hashPasswordUseCase: HashPasswordUseCase ,resetPasswordUseCase: ResetPasswordUseCase, passwordResetRepository: PasswordResetRepository) {
     
     install(ContentNegotiation) {
       gson()
     }
 
     routing {
-        userRoutes(userUseCase, hashPasswordUseCase, resetPasswordUseCase)
+        userRoutes(userUseCase, hashPasswordUseCase, resetPasswordUseCase, passwordResetRepository)
     }
     
 }
