@@ -21,6 +21,8 @@ class JwtService {
         .create()
         .withSubject("news")
         .withIssuer(issuer)
+        .withClaim("nickname", user.nickname)
+        .withClaim("userId", user.id)
         .withClaim("email", user.email)
         .withExpiresAt(LocalDateTime.now().plusDays(1).toInstant(ZoneOffset.UTC))
         .sign(algorithm)

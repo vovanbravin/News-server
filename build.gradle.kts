@@ -24,6 +24,11 @@ repositories {
 
 dependencies {
 
+    implementation("io.insert-koin:koin-core:3.1.3")
+
+    implementation("io.insert-koin:koin-ktor:3.1.3")
+
+    implementation("io.insert-koin:koin-logger-slf4j:3.1.3")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
     implementation("com.sun.mail:jakarta.mail:2.0.1")
     implementation("org.mindrot:jbcrypt:0.4")
@@ -46,6 +51,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml")
     implementation("io.ktor:ktor-serialization-gson:3.1.3")
+    implementation("io.insert-koin:koin-logger-slf4j:3.5.6")
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

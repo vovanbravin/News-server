@@ -8,4 +8,6 @@ interface UserRepository {
 
     suspend fun getUserByEmail(email: String): User?
 
+    suspend fun resetPassword(userId: Int, password: String)
+
 }

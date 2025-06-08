@@ -11,7 +11,10 @@ import java.sql.Connection
 import java.sql.DriverManager
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import tables.PasswordResetToken
+import tables.NewsImages
+import tables.NewsTable
+import tables.PasswordResetCode
+import tables.UserAvatars
 import tables.UserTable
 
 
@@ -47,7 +50,10 @@ fun Application.configureDatabase()
     transaction {
         SchemaUtils.create(
             UserTable,
-            PasswordResetToken
+            PasswordResetCode,
+            UserAvatars,
+            NewsTable,
+            NewsImages
         )
     }
 }

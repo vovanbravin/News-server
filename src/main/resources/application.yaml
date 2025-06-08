@@ -4,9 +4,9 @@ ktor:
       - com.example.plugins.ApplicationKt.module
   deployment:
     port: 8080
-    host: "176.124.207.251"
+    host: "0.0.0.0"
 postgres:
-  url: "jdbc:postgresql://176.124.207.251:5432/db"
+  url: "jdbc:postgresql://127.0.0.1/db"
   user: bob
   password: vovan123A
   passwordjwt:

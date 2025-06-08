@@ -6,6 +6,7 @@ import domain.repositories.UserRepository
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.update
 import tables.UserTable
 
 class UserRepositoryImpl: UserRepository {
@@ -35,6 +36,15 @@ class UserRepositoryImpl: UserRepository {
                 }
                 .map { it.toUser() }
                 .singleOrNull()
+        }
+    }
+
+    override suspend fun resetPassword(userId: Int, hash: String) {
+        return dbQuery {
+            UserTable
+                .update({ UserTable.id eq userId}){table->
+                    table[password] = hash
+                }
         }
     }
 }

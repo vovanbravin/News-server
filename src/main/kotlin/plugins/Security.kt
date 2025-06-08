@@ -14,9 +14,7 @@ fun Application.configureSecurity(userUseCase: UserUseCase) {
 
             validate {
                 val payload = it.payload
-                val email = payload.getClaim("email").asString()
-                val user = userUseCase.getUserByEmail(email)
-                user
+                JWTPrincipal(payload)
             }
         }
     }
